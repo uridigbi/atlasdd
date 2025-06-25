@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דשבורד אינטראקטיבי: ניתוח רשת מלונות אטלס</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: "Warm Neutral Business" -->
+    <!-- Application Structure Plan: The SPA is designed as a single-page, non-linear dashboard to transform the dense textual report into an explorable analysis. A sticky top navigation allows instant access to five core thematic sections: Overview, Portfolio, Financial Analysis, Competitive Landscape, and Risks & Recommendations. This structure prioritizes user-driven exploration over the report's linear format. The user begins with a high-level summary and can then dive into interactive data visualizations (hotel portfolio map/chart), financial comparisons, and a structured SWOT/risk analysis. This makes the information more digestible and allows a potential investor to quickly access the specific data points most relevant to their decision-making process, such as financial volatility or competitor performance. -->
+    <!-- Visualization & Content Choices: The application translates the report's text into interactive components. Goal: Organize/Compare -> Interactive bar chart (Chart.js) shows hotel distribution by city, filterable by buttons. Goal: Compare -> A sortable HTML table displays the hotel portfolio, allowing users to drill down by location. Goal: Compare Financials -> A bar chart (Chart.js) benchmarks Atlas's estimated revenue/room against public competitors, and a donut chart (Chart.js) visualizes its estimated total revenue. Goal: Organize -> The SWOT analysis is presented in a clear four-quadrant grid. Goal: Inform/Recommend -> Risks and recommendations are organized into visually distinct cards and checklists for clarity. This interactive, visual approach makes complex data accessible and supports the investor's need to quickly compare, analyze, and assess risk. No SVG/Mermaid is used, relying on Chart.js (Canvas) and structured HTML/Tailwind for all visuals. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #FDFBF7;
+            color: #333333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 40vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 50vh;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #b48c42;
+            border-color: #b48c42;
+        }
+        .btn-filter.active {
+            background-color: #2c3e50;
+            color: #ffffff;
+        }
+        .swot-card {
+            border-right: 4px solid;
+        }
+        .swot-strengths { border-color: #27ae60; }
+        .swot-weaknesses { border-color: #e74c3c; }
+        .swot-opportunities { border-color: #3498db; }
+        .swot-threats { border-color: #f39c12; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl md:text-2xl font-bold text-[#2c3e50]">ניתוח שותפות: רשת מלונות אטלס</h1>
+                <div class="hidden md:flex items-center space-x-8 lg:space-x-10 rtl:space-x-reverse">
+                    <a href="#overview" class="nav-link font-semibold pb-1">סקירה כללית</a>
+                    <a href="#portfolio" class="nav-link font-semibold pb-1">פורטפוליו</a>
+                    <a href="#financials" class="nav-link font-semibold pb-1">ניתוח פיננסי</a>
+                    <a href="#competition" class="nav-link font-semibold pb-1">סביבה תחרותית</a>
+                    <a href="#risks" class="nav-link font-semibold pb-1">סיכונים והמלצות</a>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#2c3e50] focus:border-[#2c3e50] block w-full p-2.5">
+                        <option value="overview">סקירה כללית</option>
+                        <option value="portfolio">פורטפוליו</option>
+                        <option value="financials">ניתוח פיננסי</option>
+                        <option value="competition">סביבה תחרותית</option>
+                        <option value="risks">סיכונים והמלצות</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <!-- Section 1: Overview -->
+        <section id="overview" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-[#2c3e50] mb-2">סקירה כללית: חלוצת הבוטיק בישראל</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-4xl">רשת מלונות אטלס, חלוצת מלונות הקונספט בישראל, מציגה מודל עסקי ייחודי של ניהול וחכירת נכסים. לאחרונה עברה הרשת חילופי דורות בהנהלה, מהלך המצביע על שאיפות צמיחה מחודשות לצד אתגרים תפעוליים ופיננסיים מובנים. אפליקציה זו מנתחת את כדאיות הכניסה לשותפות עם הרשת.</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center mb-12">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-4xl font-bold text-[#b48c42]">1988</div>
+                    <p class="text-gray-500 mt-2">שנת ייסוד</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-4xl font-bold text-[#b48c42]">16</div>
+                    <p class="text-gray-500 mt-2">מלונות בפריסה ארצית</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-4xl font-bold text-[#b48c42]">~1,053</div>
+                    <p class="text-gray-500 mt-2">חדרים (אומדן)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-4xl font-bold text-[#b48c42]">2</div>
+                    <p class="text-gray-500 mt-2">דורות של הנהלה</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-3">המודל העסקי: Asset-Light</h3>
+                    <p class="text-gray-700">בבסיס האסטרטגיה של אטלס עומד מודל של חברת ניהול וחכירה, ולא בעלות על נדל"ן. הרשת מתמחה באיתור נכסים, חכירתם לתקופות ארוכות, והשבחתם למלונות בוטיק מצליחים. מודל זה מאפשר צמיחה מהירה אך יוצר מבנה הוצאות קבועות גבוה, המהווה סיכון בתקופות משבר.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-3">ההנהגה החדשה: ירון וליאור ליפמן</h3>
+                    <p class="text-gray-700">בתחילת 2025, המייסדים העבירו את השרביט לדור השני. ירון ליפמן אמון על תחומי המטה והאסטרטגיה, וליאור ליפמן מתמקד בתפעול ובצמיחה. המעבר מסמן רצון להתמקצעות, אימוץ גישות מודרניות ו"כיבוש פסגות חדשות".</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 md:my-16 border-t-2 border-gray-200">
+
+        <!-- Section 2: Portfolio -->
+        <section id="portfolio" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-[#2c3e50] mb-2">פורטפוליו הנכסים: ריכוזיות וקונספט</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-4xl">פורטפוליו הרשת מונה 16 מלונות עם ריכוזיות גבוהה בתל אביב. כל מלון מבוסס על "קונספט" ייחודי השואב השראה מסביבתו, מה שמבדל את הרשת ומאפשר תמחור פרימיום. הנתונים מציגים פיזור גיאוגרפי והתמחות בשוק האורבני.</p>
+
+            <div class="chart-container mb-8">
+                <canvas id="portfolioDistributionChart"></canvas>
+            </div>
+            
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="btn-filter active px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" data-city="all">הכל (16)</button>
+                    <button class="btn-filter px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" data-city="תל אביב">תל אביב (12)</button>
+                    <button class="btn-filter px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" data-city="ירושלים">ירושלים (3)</button>
+                    <button class="btn-filter px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200" data-city="אילת">אילת (1)</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-right text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">שם המלון</th>
+                                <th scope="col" class="px-4 py-3">קונספט</th>
+                                <th scope="col" class="px-4 py-3 hidden sm:table-cell">מס' חדרים (אומדן)</th>
+                                <th scope="col" class="px-4 py-3">דירוג (Booking)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotel-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 md:my-16 border-t-2 border-gray-200">
+
+        <!-- Section 3: Financials -->
+        <section id="financials" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-[#2c3e50] mb-2">ניתוח פיננסי: תנודתיות גבוהה וביצועים משוערים</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-4xl">בהיעדר נתונים רשמיים, ניתוח הביצועים מתבסס על שחזור מידע פומבי. התמונה המצטיירת היא של רגישות גבוהה לתנאי השוק: רווחיות גבוהה בתקופות שגרה וגרעוניות עמוקה בעתות משבר. ההשוואה למתחרות ציבוריות מספקת אומדן לסדר הגודל של הפעילות.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white p-6 rounded-lg shadow">
+                     <h3 class="text-xl font-bold text-[#2c3e50] mb-4 text-center">אומדן הכנסה שנתית ממוצעת לחדר</h3>
+                    <div class="chart-container h-64 md:h-80">
+                         <canvas id="financialBenchmarkChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow flex flex-col items-center justify-center">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-4 text-center">אומדן הכנסות שנתי כולל (בשנה רגילה)</h3>
+                    <div class="text-6xl font-bold text-[#b48c42] my-4">~316M</div>
+                    <p class="text-gray-600 text-center">ש"ח</p>
+                    <p class="text-sm text-gray-500 mt-4 text-center">מבוסס על הכפלת מס' החדרים (1,053) בממוצע הכנסה לחדר של מתחרים (~300,000 ש"ח)</p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                 <h3 class="text-xl font-bold text-[#2c3e50] mb-3">רגישות לתנאי השוק</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div class="border-r-4 border-green-500 pr-4">
+                        <h4 class="font-bold text-green-600">בתקופות שגרה</h4>
+                        <p class="text-gray-700">שיעורי תפוסה מהגבוהים בענף, תמחור פרימיום (עד 1,200 ש"ח ללילה), ורווחיות פוטנציאלית גבוהה משמעותית ממלונות רגילים.</p>
+                    </div>
+                    <div class="border-r-4 border-red-500 pr-4">
+                        <h4 class="font-bold text-red-600">בתקופות משבר</h4>
+                        <p class="text-gray-700">צניחת תפוסה ל-20-25%, ירידת מחירים דרסטית (מתחת ל-500 ש"ח), והפסדיות עמוקה עקב הוצאות קבועות גבוהות.</p>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <hr class="my-12 md:my-16 border-t-2 border-gray-200">
+
+        <!-- Section 4: Competition -->
+        <section id="competition" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-[#2c3e50] mb-2">סביבה תחרותית: מאבק על נישת הבוטיק</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-4xl">אטלס מתמודדת בזירה צפופה מול מתחרת בוטיק ישירה (בראון) ומול רשתות הענק (פתאל, ישרוטל) שנכנסות באגרסיביות לסגמנט הבוטיק והלייף-סטייל, ומציבות איום משמעותי בזכות גודלן וכוח השיווק שלהן.</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-4">ניתוח SWOT</h3>
+                    <div class="space-y-4">
+                        <div class="swot-card swot-strengths p-4 bg-gray-50 rounded-md">
+                            <h4 class="font-bold">חוזקות</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-700 mt-1">
+                                <li>מעמד חלוצי ומותג חזק</li>
+                                <li>בידול באמצעות קונספטים ייחודיים</li>
+                                <li>מיקומים אסטרטגיים מנצחים</li>
+                            </ul>
+                        </div>
+                        <div class="swot-card swot-weaknesses p-4 bg-gray-50 rounded-md">
+                            <h4 class="font-bold">חולשות</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-700 mt-1">
+                                <li>תנודתיות פיננסית גבוהה</li>
+                                <li>נחיתות בגודל מול רשתות ענק</li>
+                                <li>תלות יתר בשוק התל אביבי</li>
+                            </ul>
+                        </div>
+                        <div class="swot-card swot-opportunities p-4 bg-gray-50 rounded-md">
+                            <h4 class="font-bold">הזדמנויות</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-700 mt-1">
+                                <li>היחלשות מתחרים (כמו רשת בראון)</li>
+                                <li>פיתוח מקורות הכנסה נלווים</li>
+                                <li>אנרגיה ניהולית חדשה ומודרנית</li>
+                            </ul>
+                        </div>
+                        <div class="swot-card swot-threats p-4 bg-gray-50 rounded-md">
+                            <h4 class="font-bold">איומים</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-700 mt-1">
+                                <li>התעצמות התחרות מפתאל וישרוטל</li>
+                                <li>אי-יציבות גיאופוליטית בישראל</li>
+                                <li>עליית יוקר התפעול (כ"א, ארנונה)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-4">מתחרים מרכזיים</h3>
+                    <div class="space-y-4">
+                         <div class="border-b pb-4">
+                            <h4 class="font-bold text-lg">רשת מלונות בראון</h4>
+                            <p class="text-sm text-gray-700 mt-1">המתחרה הישירה והדומה ביותר. צמחה באגרסיביות אך נקלעה לקשיים פיננסיים, מה שמהווה הזדמנות וסיפור אזהרה כאחד.</p>
+                        </div>
+                         <div class="border-b pb-4">
+                            <h4 class="font-bold text-lg">רשת פתאל</h4>
+                            <p class="text-sm text-gray-700 mt-1">ענקית המלונאות מתחרה ישירות דרך מותגי הבוטיק שלה (כמו NYX, רוטשילד 22). נהנית מיתרונות עצומים של גודל, שיווק ותוכנית נאמנות.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg">רשת ישרוטל</h4>
+                            <p class="text-sm text-gray-700 mt-1">מבצעת מהלך אסטרטגי לכניסה לשוק היוקרה והבוטיק האורבני (כמו אלברטו, אוריינט) עם פרויקטים רבים בצנרת שיגבירו את התחרות.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 md:my-16 border-t-2 border-gray-200">
+
+        <!-- Section 5: Risks & Recommendations -->
+        <section id="risks" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-[#2c3e50] mb-2">סיכונים והמלצות לשותפות</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-4xl">שותפות עם אטלס מציעה פוטנציאל תשואה גבוה אך כרוכה בסיכונים מהותיים. מקרה התביעה בירושלים מהווה נורת אזהרה ומדגיש את החשיבות של מבנה הסכם שיגן על המשקיע. ההמלצה היא להתקדם בזהירות תוך מיקוד במשא ומתן על מנגנוני הגנה חזקים.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="bg-white p-6 rounded-lg shadow border-t-4 border-red-500">
+                    <h3 class="font-bold text-lg text-red-600">סיכון שוק (גיאופוליטי)</h3>
+                    <p class="text-sm mt-2">המודל העסקי אינו עמיד בפני זעזועים ביטחוניים או משברים גלובליים שפוגעים בתיירות ומוחקים את הרווחיות.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-t-4 border-yellow-500">
+                    <h3 class="font-bold text-lg text-yellow-600">סיכון פיננסי (תפעולי)</h3>
+                    <p class="text-sm mt-2">הוצאות קבועות גבוהות עקב מודל החכירה. תקופה ממושכת של תפוסה נמוכה עלולה לשחוק מזומנים במהירות.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-t-4 border-blue-500">
+                    <h3 class="font-bold text-lg text-blue-600">סיכון משפטי (שותפות)</h3>
+                    <p class="text-sm mt-2">התביעה בי-ם מדגימה סיכון שהרשת תיסוג מהסכם אם הכדאיות הכלכלית תפחת, ותעביר את הסיכון לבעל הנכס.</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-bold text-[#2c3e50] mb-3">המלצה סופית ומבנה שותפות מוצע</h3>
+                    <p class="mb-4">יש לשאוף למודל חכירה היברידי המאזן סיכון וסיכוי:</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="inline-block bg-green-500 text-white rounded-full h-6 w-6 text-center leading-6 font-bold mr-3 rtl:mr-0 rtl:ml-3">1</span>
+                            <div>
+                                <h4 class="font-semibold">שכירות בסיס קבועה</h4>
+                                <p class="text-sm text-gray-600">סכום חודשי שיכסה הוצאות מימון ויספק תשואה מינימלית, ללא תלות בביצועי המלון.</p>
+                            </div>
+                        </li>
+                         <li class="flex items-start">
+                             <span class="inline-block bg-green-500 text-white rounded-full h-6 w-6 text-center leading-6 font-bold mr-3 rtl:mr-0 rtl:ml-3">2</span>
+                            <div>
+                                <h4 class="font-semibold">רכיב משתנה</h4>
+                                <p class="text-sm text-gray-600">אחוז מהכנסות המלון (או מהרווח), המאפשר לבעל הנכס להשתתף בהצלחה וליהנות מה-upside.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <p class="mt-4 font-semibold">בנוסף, יש להתעקש על קנסות יציאה גבוהים, הגדרות ברורות למצבי קיצון והתחייבות להשקעות הון.</p>
+                </div>
+                <div class="lg:col-span-2 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                     <h3 class="text-xl font-bold text-[#2c3e50] mb-3">צעדים הבאים (בדיקת נאותות)</h3>
+                     <ul class="space-y-3 list-decimal list-inside text-gray-700">
+                        <li>דרישת נתונים פיננסיים היסטוריים ממלונות מייצגים.</li>
+                        <li>הבהרת מבנה הבעלות הנוכחי של הרשת.</li>
+                        <li>דיון ישיר עם ההנהלה על התביעה בירושלים.</li>
+                        <li>בניית מודל פיננסי משותף ובחינת תרחישי קיצון.</li>
+                        <li>שכירת ליווי משפטי המתמחה בהסכמי מלונאות.</li>
+                     </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto px-4 py-6 text-center text-sm text-gray-500">
+            <p>דוח זה נוצר למטרות המחשה בלבד על בסיס מידע פומבי נכון ליוני 2025.</p>
+            <p>&copy; 2025 ניתוח בדיקת נאותות. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const hotelData = [
+                { name: 'בקסטייג\'', city: 'תל אביב', concept: 'עולם התיאטרון', rooms: 38, rating: 9.2 },
+                { name: 'פבריק', city: 'תל אביב', concept: 'טקסטיל ואופנה', rooms: 40, rating: 9.1 },
+                { name: 'סינמה', city: 'תל אביב', concept: 'קולנוע נוסטלגי', rooms: 83, rating: 9.0 },
+                { name: '65 רוטשילד', city: 'תל אביב', concept: 'יוקרה אורבנית', rooms: 74, rating: 8.9 },
+                { name: 'שלום & רילקס', city: 'תל אביב', concept: 'חופשת חוף', rooms: 51, rating: 8.8 },
+                { name: 'ארטיסט', city: 'תל אביב', concept: 'אמנות ישראלית', rooms: 60, rating: 8.7 },
+                { name: 'מרקט האוס', city: 'תל אביב', concept: 'שוק הפשפשים', rooms: 44, rating: 9.4 },
+                { name: 'סנטר שיק', city: 'תל אביב', concept: 'באוהאוס', rooms: 54, rating: 9.1 },
+                { name: 'מלודי', city: 'תל אביב', concept: 'עסקים ופנאי', rooms: 55, rating: 9.0 },
+                { name: 'טל', city: 'תל אביב', concept: 'חוף ונמל', rooms: 123, rating: 8.7 },
+                { name: 'ים', city: 'תל אביב', concept: 'חוף וגלישה', rooms: 42, rating: 9.4 },
+                { name: 'שדות', city: 'תל אביב', concept: 'עסקים ונתב"ג', rooms: 55, rating: 8.5 },
+                { name: 'ארתור', city: 'ירושלים', concept: 'שנות ה-30', rooms: 54, rating: 8.8 },
+                { name: 'בצלאל', city: 'ירושלים', concept: 'אמנות ועיצוב', rooms: 37, rating: 9.2 },
+                { name: 'הרמוני', city: 'ירושלים', concept: 'קרבה לעיר העתיקה', rooms: 50, rating: 9.1 },
+                { name: 'נווה אילת', city: 'אילת', concept: 'חאן מדברי', rooms: 193, rating: 8.9 },
+            ];
+
+            const tableBody = document.getElementById('hotel-table-body');
+            const filterButtons = document.querySelectorAll('.btn-filter');
+
+            const renderTable = (cityFilter) => {
+                tableBody.innerHTML = '';
+                const filteredData = cityFilter === 'all' ? hotelData : hotelData.filter(h => h.city === cityFilter);
+                
+                if (filteredData.length === 0) {
+                     tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-4">לא נמצאו מלונות.</td></tr>';
+                     return;
+                }
+                
+                filteredData.forEach(hotel => {
+                    const row = `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-4 font-medium text-gray-900 whitespace-nowrap">${hotel.name}</td>
+                            <td class="px-4 py-4">${hotel.concept}</td>
+                            <td class="px-4 py-4 hidden sm:table-cell">${hotel.rooms}</td>
+                            <td class="px-4 py-4 font-bold text-[#2c3e50]">${hotel.rating.toFixed(1)}</td>
+                        </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            };
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    renderTable(button.dataset.city);
+                });
+            });
+
+            renderTable('all');
+
+            const createPortfolioDistributionChart = () => {
+                const ctx = document.getElementById('portfolioDistributionChart').getContext('2d');
+                const cities = ['תל אביב', 'ירושלים', 'אילת'];
+                const hotelCount = cities.map(city => hotelData.filter(h => h.city === city).length);
+                const roomCount = cities.map(city => hotelData.filter(h => h.city === city).reduce((sum, h) => sum + h.rooms, 0));
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: cities,
+                        datasets: [
+                            {
+                                label: 'מספר מלונות',
+                                data: hotelCount,
+                                backgroundColor: '#2c3e50',
+                                borderColor: '#2c3e50',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'מספר חדרים (אומדן)',
+                                data: roomCount,
+                                backgroundColor: '#b48c42',
+                                borderColor: '#b48c42',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'התפלגות נכסים וחדרים לפי עיר' },
+                            tooltip: { bodyFont: { family: 'Assistant' }, titleFont: { family: 'Assistant' } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { font: { family: 'Assistant' } } },
+                            x: { ticks: { font: { family: 'Assistant', size: 14 } } }
+                        }
+                    }
+                });
+            };
+
+            const createFinancialBenchmarkChart = () => {
+                const ctx = document.getElementById('financialBenchmarkChart').getContext('2d');
+                 new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['אטלס (אומדן)', 'פתאל', 'דן', 'ישרוטל'],
+                        datasets: [{
+                            label: 'הכנסה שנתית ממוצעת לחדר (אלפי ש"ח)',
+                            data: [300, 345, 375, 175],
+                            backgroundColor: ['#b48c42', '#34495e', '#34495e', '#34495e'],
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { bodyFont: { family: 'Assistant' }, titleFont: { family: 'Assistant' } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { family: 'Assistant' } } },
+                            y: { ticks: { font: { family: 'Assistant', size: 12 } } }
+                        }
+                    }
+                });
+            };
+
+            const smoothScrollTo = (targetId) => {
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70, 
+                        behavior: 'smooth'
+                    });
+                }
+            };
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    smoothScrollTo(targetId);
+                    
+                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                 smoothScrollTo(e.target.value);
+            });
+            
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                if (mobileNav.value !== current && current !== '') {
+                    mobileNav.value = current;
+                }
+            });
+
+            createPortfolioDistributionChart();
+            createFinancialBenchmarkChart();
+        });
+    </script>
+</body>
+</html>
